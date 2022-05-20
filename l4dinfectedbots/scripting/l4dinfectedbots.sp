@@ -1605,8 +1605,11 @@ public Action Timer_InfectedKillSelf(Handle Timer, int client)
 {
 	if( client && IsClientInGame(client) && !IsFakeClient(client) )
 	{
-		PrintHintText(client,"[TS] %T","Not allowed to respawn",client);
-		ForcePlayerSuicide(client);
+		if(g_iCurrentMode == 3)
+		{
+			PrintHintText(client, "[TS] %T", "Not allowed to respawn in survival mode", client);
+			ForcePlayerSuicide(client);
+		}
 	}
 	return Plugin_Continue;
 }
@@ -3768,6 +3771,11 @@ public Action Spawn_InfectedBot(Handle timer)
 			SetEntProp(bot, Prop_Send, "m_iObserverMode", 0);
 			SetEntProp(bot, Prop_Send, "m_iPlayerState", 0);
 			SetEntProp(bot, Prop_Send, "m_zombieState", 0);
+			if(!IsFakeClient(anyclient))
+			{
+				SetGhostStatus(anyclient, true);
+			}
+
 			DispatchSpawn(bot);
 			ActivateEntity(bot);
 			TeleportEntity(bot, vecPos, NULL_VECTOR, NULL_VECTOR); //移動到相同位置
@@ -3808,7 +3816,13 @@ public Action kickbot(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if (client && IsClientInGame(client) && IsFakeClient(client) && !IsClientInKickQueue(client) )
 	{
-		KickClient(client);
+		char auth[64];
+		GetClientAuthId(client, AuthId_Steam2, auth, sizeof(auth));
+
+		if (StrEqual(auth, "BOT", false))
+		{
+		    KickClient(client);
+		}
 	}
 
 	return Plugin_Continue;
